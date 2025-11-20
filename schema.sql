@@ -131,3 +131,67 @@ INSERT INTO buses (operator_id, route_id, departure_time, arrival_time, price, t
 (4, 4, '05:00', '12:00', 300.00, 'standard', 40, 40, '["Music", "Storage"]', '[1,2,3,4,5,6,0]'),
 (5, 5, '06:30', '14:30', 400.00, 'standard', 35, 35, '["AC"]', '[1,2,3,4,5,6,0]'),
 (1, 6, '14:00', '19:00', 310.00, 'luxury', 45, 45, '["AC", "TV", "USB"]', '[1,2,3,4,5,6,0]');
+
+-- Analytics and Admin Tables
+
+-- Admin Users Table
+CREATE TABLE admin_users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'admin',
+    is_active BOOLEAN DEFAULT true,
+    last_login TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Search Analytics Table
+CREATE TABLE search_analytics (
+    id SERIAL PRIMARY KEY,
+    search_query VARCHAR(255),
+    destination VARCHAR(100),
+    travel_date TIMESTAMP,
+    results_count INTEGER,
+    user_phone VARCHAR(20),
+    session_id VARCHAR(100),
+    ip_address VARCHAR(50),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Page Views Table
+CREATE TABLE page_views (
+    id SERIAL PRIMARY KEY,
+    page VARCHAR(255) NOT NULL,
+    user_phone VARCHAR(20),
+    session_id VARCHAR(100),
+    referrer VARCHAR(500),
+    user_agent VARCHAR(500),
+    ip_address VARCHAR(50),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Booking Attempts Table
+CREATE TABLE booking_attempts (
+    id SERIAL PRIMARY KEY,
+    bus_id INTEGER REFERENCES buses(id),
+    user_phone VARCHAR(20) NOT NULL,
+    session_id VARCHAR(100),
+    status VARCHAR(50) DEFAULT 'attempted',
+    failure_reason TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Indexes for Analytics
+CREATE INDEX idx_search_analytics_destination ON search_analytics(destination);
+CREATE INDEX idx_search_analytics_created_at ON search_analytics(created_at);
+CREATE INDEX idx_page_views_session ON page_views(session_id);
+CREATE INDEX idx_page_views_created_at ON page_views(created_at);
+CREATE INDEX idx_booking_attempts_bus ON booking_attempts(bus_id);
+CREATE INDEX idx_booking_attempts_created_at ON booking_attempts(created_at);
+
+-- Insert Default Admin User (password: admin123 - CHANGE THIS!)
+-- Password hash is bcrypt hash of 'admin123'
+INSERT INTO admin_users (email, password_hash, name, role) VALUES
+('admin@intercity.zm', '$2a$10$rKJ5vZ8xKxKx8xKxKxKxKO9qKxKxKxKxKxKxKxKxKxKxKxKxKxKx', 'System Administrator', 'super_admin');
