@@ -138,6 +138,63 @@ export const feedbackRelations = relations(feedback, ({ one }) => ({
   }),
 }));
 
+// Admin Users Table
+export const adminUsers = pgTable('admin_users', {
+  id: serial('id').primaryKey(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  role: varchar('role', { length: 50 }).default('admin'),
+  isActive: boolean('is_active').default(true),
+  lastLogin: timestamp('last_login'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Search Analytics Table
+export const searchAnalytics = pgTable('search_analytics', {
+  id: serial('id').primaryKey(),
+  searchQuery: varchar('search_query', { length: 255 }),
+  destination: varchar('destination', { length: 100 }),
+  travelDate: timestamp('travel_date'),
+  resultsCount: integer('results_count'),
+  userPhone: varchar('user_phone', { length: 20 }),
+  sessionId: varchar('session_id', { length: 100 }),
+  ipAddress: varchar('ip_address', { length: 50 }),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Page Views Table
+export const pageViews = pgTable('page_views', {
+  id: serial('id').primaryKey(),
+  page: varchar('page', { length: 255 }).notNull(),
+  userPhone: varchar('user_phone', { length: 20 }),
+  sessionId: varchar('session_id', { length: 100 }),
+  referrer: varchar('referrer', { length: 500 }),
+  userAgent: varchar('user_agent', { length: 500 }),
+  ipAddress: varchar('ip_address', { length: 50 }),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Booking Attempts Table (for analytics)
+export const bookingAttempts = pgTable('booking_attempts', {
+  id: serial('id').primaryKey(),
+  busId: integer('bus_id').references(() => buses.id),
+  userPhone: varchar('user_phone', { length: 20 }).notNull(),
+  sessionId: varchar('session_id', { length: 100 }),
+  status: varchar('status', { length: 50 }).default('attempted'),
+  failureReason: text('failure_reason'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Relations for new tables
+export const bookingAttemptsRelations = relations(bookingAttempts, ({ one }) => ({
+  bus: one(buses, {
+    fields: [bookingAttempts.busId],
+    references: [buses.id],
+  }),
+}));
+
 // Type exports
 export type Operator = typeof operators.$inferSelect;
 export type NewOperator = typeof operators.$inferInsert;
@@ -151,3 +208,11 @@ export type Payment = typeof payments.$inferSelect;
 export type NewPayment = typeof payments.$inferInsert;
 export type Feedback = typeof feedback.$inferSelect;
 export type NewFeedback = typeof feedback.$inferInsert;
+export type AdminUser = typeof adminUsers.$inferSelect;
+export type NewAdminUser = typeof adminUsers.$inferInsert;
+export type SearchAnalytics = typeof searchAnalytics.$inferSelect;
+export type NewSearchAnalytics = typeof searchAnalytics.$inferInsert;
+export type PageView = typeof pageViews.$inferSelect;
+export type NewPageView = typeof pageViews.$inferInsert;
+export type BookingAttempt = typeof bookingAttempts.$inferSelect;
+export type NewBookingAttempt = typeof bookingAttempts.$inferInsert;
