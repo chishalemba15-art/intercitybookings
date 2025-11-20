@@ -7,10 +7,6 @@
     --font-inter: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
-  * {
-    @apply border-border;
-  }
-
   body {
     @apply bg-brand-light text-slate-800;
     font-feature-settings: 'rlig' 1, 'calt' 1;
