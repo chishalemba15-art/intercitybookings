@@ -101,13 +101,14 @@ export default function BookingModal({ isOpen, onClose, bus }: BookingModalProps
 
       const data = await response.json();
 
-      if (data.success && data.bookingRef) {
-        setBookingRef(data.bookingRef);
+      if (data.success && data.data?.booking?.bookingRef) {
+        const bookingRefValue = data.data.booking.bookingRef;
+        setBookingRef(bookingRefValue);
         setShowSuccess(true);
 
         // Show success toast with confetti effect
         toast.success(
-          `🎉 Booking Confirmed!\nReference: ${data.bookingRef}\nSeat: ${seatNumber}`,
+          `🎉 Booking Confirmed!\nReference: ${bookingRefValue}\nSeat: ${seatNumber}`,
           {
             duration: 6000,
             style: {
