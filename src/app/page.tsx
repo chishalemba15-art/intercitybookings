@@ -10,6 +10,7 @@ import BookingModal from '@/components/BookingModal';
 import RegistrationModal from '@/components/RegistrationModal';
 import PromotionsBanner from '@/components/PromotionsBanner';
 import TrendingDestinations from '@/components/TrendingDestinations';
+import UserBookingsModal from '@/components/UserBookingsModal';
 import Footer from '@/components/Footer';
 import { useUserSession } from '@/hooks/useUserSession';
 import { useBookingNotifications } from '@/hooks/useBookingNotifications';
@@ -46,10 +47,14 @@ export default function Home() {
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [feedbackRating, setFeedbackRating] = useState<number>(5);
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
+  const [isBookingsModalOpen, setIsBookingsModalOpen] = useState(false);
 
   // Use custom hooks
   const { session, register, incrementSearchCount, needsRegistration, isRegistered } = useUserSession();
-  const { latestBookings } = useBookingNotifications(true);
+  const { latestBookings } = useBookingNotifications({
+    enabled: true,
+    onBookingClick: () => setIsBookingsModalOpen(true),
+  });
 
   // Load buses on mount
   useEffect(() => {
@@ -212,7 +217,7 @@ export default function Home() {
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
 
       <div className="min-h-screen flex flex-col">
-        <Navbar />
+        <Navbar onNotificationClick={() => setIsBookingsModalOpen(true)} />
         <Hero onSearch={handleSearch} />
 
         {/* Main Content */}
@@ -527,6 +532,13 @@ export default function Home() {
           isOpen={isRegistrationModalOpen}
           onClose={() => setIsRegistrationModalOpen(false)}
           onRegister={handleRegistration}
+        />
+
+        {/* User Bookings Modal */}
+        <UserBookingsModal
+          isOpen={isBookingsModalOpen}
+          onClose={() => setIsBookingsModalOpen(false)}
+          userPhone={session?.phone || ''}
         />
       </div>
     </>

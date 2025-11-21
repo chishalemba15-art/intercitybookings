@@ -15,13 +15,25 @@ interface RecentBooking {
   createdAt: string;
 }
 
-export function useBookingNotifications(enabled: boolean = true) {
+interface UseBookingNotificationsProps {
+  enabled?: boolean;
+  onBookingClick?: () => void;
+}
+
+export function useBookingNotifications({
+  enabled = true,
+  onBookingClick
+}: UseBookingNotificationsProps | boolean = {}) {
+  // Handle backward compatibility - if boolean is passed, convert to object
+  const enabledValue = typeof enabled === 'boolean' ? enabled : (enabled as UseBookingNotificationsProps).enabled ?? true;
+  const onBookingClickValue = typeof enabled === 'object' ? (enabled as UseBookingNotificationsProps).onBookingClick : onBookingClick;
+
   const [latestBookings, setLatestBookings] = useState<RecentBooking[]>([]);
   const seenBookingIds = useRef<Set<number>>(new Set());
   const isFirstLoad = useRef(true);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabledValue) return;
 
     const fetchRecentBookings = async () => {
       try {
@@ -64,7 +76,7 @@ export function useBookingNotifications(enabled: boolean = true) {
     return () => {
       clearInterval(interval);
     };
-  }, [enabled]);
+  }, [enabledValue]);
 
   const showBookingNotification = (booking: RecentBooking) => {
     toast.custom(
@@ -96,9 +108,20 @@ export function useBookingNotifications(enabled: boolean = true) {
             </div>
           </div>
           <div className="flex border-l border-gray-200">
+            {onBookingClickValue && (
+              <button
+                onClick={() => {
+                  onBookingClickValue();
+                  toast.dismiss(t.id);
+                }}
+                className="border-r border-gray-200 px-4 py-2 flex items-center justify-center text-sm font-medium text-brand-primary hover:text-brand-primary/80 focus:outline-none hover:bg-slate-50 transition-colors"
+              >
+                View All
+              </button>
+            )}
             <button
               onClick={() => toast.dismiss(t.id)}
-              className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-brand-primary hover:text-brand-primary/80 focus:outline-none"
+              className="flex-1 border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none"
             >
               Close
             </button>
