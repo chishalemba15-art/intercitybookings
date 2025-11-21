@@ -1,129 +1,125 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import SplashScreen from '@/components/SplashScreen';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import BusCard from '@/components/BusCard';
 import BookingModal from '@/components/BookingModal';
+import RegistrationModal from '@/components/RegistrationModal';
 import Footer from '@/components/Footer';
+import { useUserSession } from '@/hooks/useUserSession';
+import { useBookingNotifications } from '@/hooks/useBookingNotifications';
 
-// Mock data - will be replaced with API calls
-const mockBuses = [
-  {
-    id: 1,
-    operator: 'Mazhandu Family',
-    from: 'Lusaka',
-    to: 'Livingstone',
-    time: '06:00',
-    price: '350',
-    type: 'luxury',
-    seats: 45,
-    rating: '4.8',
-    features: ['AC', 'USB', 'Snacks', 'Wi-Fi'],
-    color: 'bg-red-600',
-  },
-  {
-    id: 2,
-    operator: 'Power Tools',
-    from: 'Lusaka',
-    to: 'Kitwe',
-    time: '07:30',
-    price: '280',
-    type: 'standard',
-    seats: 50,
-    rating: '4.5',
-    features: ['AC', 'Leg Room'],
-    color: 'bg-blue-600',
-  },
-  {
-    id: 3,
-    operator: 'Juldan Motors',
-    from: 'Lusaka',
-    to: 'Johannesburg',
-    time: '10:00',
-    price: '1200',
-    type: 'luxury',
-    seats: 30,
-    rating: '4.9',
-    features: ['Reclining Seats', 'Meal', 'Toilet', 'AC', 'Entertainment'],
-    color: 'bg-green-600',
-  },
-  {
-    id: 4,
-    operator: 'Shalom Bus',
-    from: 'Lusaka',
-    to: 'Chipata',
-    time: '05:00',
-    price: '300',
-    type: 'standard',
-    seats: 40,
-    rating: '4.2',
-    features: ['Music', 'Storage'],
-    color: 'bg-purple-600',
-  },
-  {
-    id: 5,
-    operator: 'Likili',
-    from: 'Lusaka',
-    to: 'Mongu',
-    time: '06:30',
-    price: '400',
-    type: 'standard',
-    seats: 35,
-    rating: '4.0',
-    features: ['AC'],
-    color: 'bg-orange-600',
-  },
-  {
-    id: 6,
-    operator: 'Mazhandu Family',
-    from: 'Lusaka',
-    to: 'Ndola',
-    time: '14:00',
-    price: '310',
-    type: 'luxury',
-    seats: 45,
-    rating: '4.8',
-    features: ['AC', 'TV', 'USB'],
-    color: 'bg-red-600',
-  },
-];
+interface Bus {
+  id: number;
+  operator: string;
+  operatorColor: string;
+  from: string;
+  to: string;
+  time: string;
+  price: string;
+  type: 'luxury' | 'standard';
+  seats: number;
+  availableSeats: number;
+  rating: string;
+  features: string[];
+  color: string;
+}
 
-type BusType = typeof mockBuses[0];
+type BusType = Bus;
 
 export default function Home() {
   const [showSplash, setShowSplash] = useState(true);
-  const [buses, setBuses] = useState<BusType[]>(mockBuses);
-  const [filteredBuses, setFilteredBuses] = useState<BusType[]>(mockBuses);
+  const [buses, setBuses] = useState<BusType[]>([]);
+  const [filteredBuses, setFilteredBuses] = useState<BusType[]>([]);
   const [category, setCategory] = useState<'all' | 'luxury' | 'standard'>('all');
   const [selectedBus, setSelectedBus] = useState<BusType | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchDestination, setSearchDestination] = useState('');
+  const [searchDate, setSearchDate] = useState('');
+
+  // Use custom hooks
+  const { session, register, incrementSearchCount, needsRegistration, isRegistered } = useUserSession();
+  const { latestBookings } = useBookingNotifications(true);
+
+  // Load buses on mount
+  useEffect(() => {
+    loadBuses();
+  }, []);
+
+  // Show welcome message for registered users
+  useEffect(() => {
+    if (session && session.name && !showSplash) {
+      toast.success(`Welcome back, ${session.name.split(' ')[0]}! 👋`, {
+        duration: 3000,
+      });
+    }
+  }, [session, showSplash]);
+
+  const loadBuses = async (destination?: string, date?: string, type?: string) => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (destination) params.append('destination', destination);
+      if (date) params.append('date', date);
+      if (type && type !== 'all') params.append('type', type);
+
+      const response = await fetch(`/api/buses?${params.toString()}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setBuses(data.data);
+        setFilteredBuses(data.data);
+
+        if (destination || type) {
+          toast.success(`Found ${data.count} buses for your search`, {
+            icon: '🚌',
+          });
+        }
+      } else {
+        toast.error('Failed to load buses. Please try again.');
+      }
+    } catch (error) {
+      console.error('Failed to load buses:', error);
+      toast.error('Failed to load buses. Please check your connection.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSplashComplete = () => {
     setShowSplash(false);
   };
 
-  const handleSearch = (destination: string, date: string) => {
-    let filtered = buses;
-
-    if (destination) {
-      filtered = filtered.filter((bus) =>
-        bus.to.toLowerCase().includes(destination.toLowerCase())
-      );
+  const handleSearch = async (destination: string, date: string) => {
+    // Check if user needs to register first
+    if (needsRegistration()) {
+      setSearchDestination(destination);
+      setSearchDate(date);
+      setIsRegistrationModalOpen(true);
+      toast.error('Please register to continue searching', {
+        icon: '🔒',
+        duration: 4000,
+      });
+      return;
     }
 
-    setFilteredBuses(filtered);
+    // Increment search count
+    incrementSearchCount();
+
+    // Perform search
+    setSearchDestination(destination);
+    setSearchDate(date);
+    await loadBuses(destination, date, category === 'all' ? undefined : category);
   };
 
-  const handleCategoryChange = (newCategory: 'all' | 'luxury' | 'standard') => {
+  const handleCategoryChange = async (newCategory: 'all' | 'luxury' | 'standard') => {
     setCategory(newCategory);
-
-    if (newCategory === 'all') {
-      setFilteredBuses(buses);
-    } else {
-      setFilteredBuses(buses.filter((bus) => bus.type === newCategory));
-    }
+    await loadBuses(searchDestination, searchDate, newCategory === 'all' ? undefined : newCategory);
   };
 
   const handleBooking = (busId: number) => {
@@ -137,6 +133,20 @@ export default function Home() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setTimeout(() => setSelectedBus(null), 300);
+  };
+
+  const handleRegistration = (name: string, phone: string) => {
+    register(name, phone);
+    setIsRegistrationModalOpen(false);
+
+    toast.success(`Welcome, ${name.split(' ')[0]}! You're all set! 🎉`, {
+      duration: 4000,
+    });
+
+    // Continue with the search after registration
+    if (searchDestination || searchDate) {
+      handleSearch(searchDestination, searchDate);
+    }
   };
 
   return (
@@ -197,7 +207,25 @@ export default function Home() {
 
           {/* Bus Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {filteredBuses.length > 0 ? (
+            {isLoading ? (
+              // Loading skeletons
+              Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 animate-pulse"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-slate-200 rounded-full"></div>
+                    <div className="flex-1">
+                      <div className="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                  <div className="h-20 bg-slate-200 rounded-lg mb-4"></div>
+                  <div className="h-10 bg-slate-200 rounded-lg"></div>
+                </div>
+              ))
+            ) : filteredBuses.length > 0 ? (
               filteredBuses.map((bus, index) => (
                 <BusCard
                   key={bus.id}
@@ -376,6 +404,13 @@ export default function Home() {
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           bus={selectedBus}
+        />
+
+        {/* Registration Modal */}
+        <RegistrationModal
+          isOpen={isRegistrationModalOpen}
+          onClose={() => setIsRegistrationModalOpen(false)}
+          onRegister={handleRegistration}
         />
       </div>
     </>

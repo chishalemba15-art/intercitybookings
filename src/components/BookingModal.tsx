@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -20,13 +21,23 @@ interface BookingModalProps {
 export default function BookingModal({ isOpen, onClose, bus }: BookingModalProps) {
   const [paymentMethod, setPaymentMethod] = useState<'airtel' | 'mtn'>('airtel');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [passengerName, setPassengerName] = useState('');
+  const [passengerEmail, setPassengerEmail] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [bookingRef, setBookingRef] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
+      // Reset form when modal closes
+      setPassengerName('');
+      setPassengerEmail('');
+      setPhoneNumber('');
+      setShowSuccess(false);
+      setBookingRef('');
     }
     return () => {
       document.body.style.overflow = 'unset';
@@ -36,21 +47,89 @@ export default function BookingModal({ isOpen, onClose, bus }: BookingModalProps
   if (!bus) return null;
 
   const handlePayment = async () => {
+    // Validate inputs
+    if (!passengerName.trim()) {
+      toast.error('Please enter your full name');
+      return;
+    }
+
     if (!phoneNumber) {
-      alert('Please enter your phone number');
+      toast.error('Please enter your phone number');
+      return;
+    }
+
+    if (!/^(\+260|0)?[97]\d{8}$/.test(phoneNumber.replace(/\s/g, ''))) {
+      toast.error('Please enter a valid Zambian phone number');
       return;
     }
 
     setIsProcessing(true);
 
-    // Simulate payment processing
-    setTimeout(() => {
+    try {
+      // Format phone number
+      let formattedPhone = phoneNumber.replace(/\s/g, '');
+      if (formattedPhone.startsWith('0')) {
+        formattedPhone = '+260' + formattedPhone.substring(1);
+      } else if (!formattedPhone.startsWith('+')) {
+        formattedPhone = '+260' + formattedPhone;
+      }
+
+      // Generate a random seat number
+      const seatNumber = `A${Math.floor(Math.random() * bus.seats) + 1}`;
+
+      // Get today's date for travel (or use a date picker value)
+      const travelDate = new Date();
+      travelDate.setDate(travelDate.getDate() + 1); // Tomorrow
+
+      // Create booking via API
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          busId: bus.id,
+          passengerName: passengerName.trim(),
+          passengerPhone: formattedPhone,
+          passengerEmail: passengerEmail.trim() || undefined,
+          seatNumber,
+          travelDate: travelDate.toISOString().split('T')[0],
+          paymentMethod: paymentMethod,
+          totalAmount: parseFloat(bus.price),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.bookingRef) {
+        setBookingRef(data.bookingRef);
+        setShowSuccess(true);
+
+        // Show success toast with confetti effect
+        toast.success(
+          `🎉 Booking Confirmed!\nReference: ${data.bookingRef}\nSeat: ${seatNumber}`,
+          {
+            duration: 6000,
+            style: {
+              background: '#10b981',
+              color: '#fff',
+            },
+          }
+        );
+
+        // Auto close after 5 seconds
+        setTimeout(() => {
+          onClose();
+        }, 5000);
+      } else {
+        toast.error(data.error || 'Booking failed. Please try again.');
+        setIsProcessing(false);
+      }
+    } catch (error) {
+      console.error('Booking error:', error);
+      toast.error('Failed to process booking. Please check your connection.');
       setIsProcessing(false);
-      alert(
-        `Payment Successful!\n\nTicket ID: #ZM${Math.floor(Math.random() * 10000)}\nCheck your SMS for ticket details.`
-      );
-      onClose();
-    }, 2000);
+    }
   };
 
   const getInstructions = () => {
@@ -222,30 +301,101 @@ export default function BookingModal({ isOpen, onClose, bus }: BookingModalProps
                   </label>
                 </div>
 
+                {/* Passenger Details */}
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={passengerName}
+                      onChange={(e) => setPassengerName(e.target.value)}
+                      placeholder="Enter your full name"
+                      className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="097 123 4567"
+                      className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                      Email (optional)
+                    </label>
+                    <input
+                      type="email"
+                      value={passengerEmail}
+                      onChange={(e) => setPassengerEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
                 {/* Payment Instructions */}
-                <div className="bg-slate-100 rounded-lg p-4 text-sm text-slate-600 mb-6 border border-slate-200">
-                  <p className="font-bold mb-2 text-slate-800">Instructions:</p>
+                <div className="bg-slate-100 rounded-lg p-4 text-sm text-slate-600 mb-4 border border-slate-200">
+                  <p className="font-bold mb-2 text-slate-800">Payment Instructions:</p>
                   <ol className="list-decimal list-inside space-y-1">
                     {getInstructions().map((instruction, idx) => (
                       <li key={idx} dangerouslySetInnerHTML={{ __html: instruction }} />
                     ))}
                   </ol>
                 </div>
-
-                {/* Phone Number Input */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Your Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="097..."
-                    className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent"
-                  />
-                </div>
               </div>
+
+              {/* Success State */}
+              {showSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="absolute inset-0 bg-white flex flex-col items-center justify-center p-8 z-10"
+                >
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+                    className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6"
+                  >
+                    <svg
+                      className="w-10 h-10 text-green-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </motion.div>
+                  <h3 className="text-2xl font-bold text-green-600 mb-2">Booking Confirmed!</h3>
+                  <p className="text-slate-600 text-center mb-4">
+                    Your ticket has been successfully booked
+                  </p>
+                  <div className="bg-slate-100 rounded-lg p-4 mb-6 text-center">
+                    <p className="text-xs text-slate-500 mb-1">Booking Reference</p>
+                    <p className="text-lg font-bold text-brand-primary">{bookingRef}</p>
+                  </div>
+                  <p className="text-sm text-slate-500 text-center">
+                    We've sent the ticket details to your phone via SMS
+                  </p>
+                </motion.div>
+              )}
 
               {/* Footer */}
               <div className="bg-slate-50 px-5 md:px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-3">
@@ -254,7 +404,7 @@ export default function BookingModal({ isOpen, onClose, bus }: BookingModalProps
                 </p>
                 <button
                   onClick={handlePayment}
-                  disabled={isProcessing}
+                  disabled={isProcessing || showSuccess}
                   className="w-full sm:w-auto bg-brand-primary text-white px-6 py-2.5 rounded-lg font-semibold shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isProcessing ? (
@@ -282,7 +432,7 @@ export default function BookingModal({ isOpen, onClose, bus }: BookingModalProps
                       Processing...
                     </>
                   ) : (
-                    'Confirm Payment'
+                    'Confirm Booking'
                   )}
                 </button>
               </div>
