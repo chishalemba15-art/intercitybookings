@@ -1,7 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface Suggestion {
+  name: string;
+  searchCount: number;
+  cheapestPrice: number | null;
+}
 
 interface HeroProps {
   onSearch: (destination: string, date: string) => void;
@@ -10,11 +16,62 @@ interface HeroProps {
 export default function Hero({ onSearch }: HeroProps) {
   const [destination, setDestination] = useState('');
   const [date, setDate] = useState('');
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Fetch search suggestions
+  useEffect(() => {
+    if (destination.length > 0) {
+      const fetchSuggestions = async () => {
+        setLoading(true);
+        try {
+          const response = await fetch(`/api/search-suggestions?q=${encodeURIComponent(destination)}`);
+          const data = await response.json();
+          if (data.success) {
+            setSuggestions(data.data);
+            setShowSuggestions(true);
+          }
+        } catch (error) {
+          console.error('Failed to fetch suggestions:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const timer = setTimeout(fetchSuggestions, 300);
+      return () => clearTimeout(timer);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [destination]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    if (showSuggestions) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showSuggestions]);
 
   const handleSearch = () => {
     if (destination || date) {
+      setShowSuggestions(false);
       onSearch(destination, date);
     }
+  };
+
+  const handleSuggestionClick = (suggestion: Suggestion) => {
+    setDestination(suggestion.name);
+    setShowSuggestions(false);
   };
 
   return (
@@ -75,9 +132,9 @@ export default function Hero({ onSearch }: HeroProps) {
           transition={{ delay: 0.5, duration: 0.6 }}
           className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl shadow-slate-900/20 p-3 md:p-5 flex flex-col md:flex-row gap-3 transform translate-y-8 border border-slate-100"
         >
-          {/* Destination Input */}
-          <div className="flex-1 relative group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          {/* Destination Input with Suggestions */}
+          <div className="flex-1 relative group" ref={suggestionsRef}>
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -102,9 +159,54 @@ export default function Hero({ onSearch }: HeroProps) {
               type="text"
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
+              onFocus={() => destination.length > 0 && setShowSuggestions(true)}
               placeholder="Destination (e.g. Kitwe)"
               className="block w-full pl-11 pr-4 py-3 md:py-3.5 border border-slate-200 rounded-xl text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all bg-slate-50 focus:bg-white text-sm md:text-base"
             />
+
+            {/* Suggestions Dropdown */}
+            <AnimatePresence>
+              {showSuggestions && suggestions.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden"
+                >
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0 flex items-center justify-between group"
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-slate-900 text-sm">{suggestion.name}</span>
+                        <span className="text-xs text-slate-500">
+                          {suggestion.searchCount} searches •
+                          {suggestion.cheapestPrice ? ` from K${suggestion.cheapestPrice.toFixed(2)}` : ' No price data'}
+                        </span>
+                      </div>
+                      {suggestion.searchCount > 10 && (
+                        <span className="text-xs bg-brand-primary/10 text-brand-primary font-semibold px-2 py-1 rounded-full group-hover:bg-brand-primary/20">
+                          Trending
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Loading State */}
+            {loading && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 px-4 py-3">
+                <span className="text-sm text-slate-500 flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-brand-primary animate-pulse"></div>
+                  Finding destinations...
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Date Input */}

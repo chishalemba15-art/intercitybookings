@@ -260,100 +260,160 @@ export default function BookingModal({ isOpen, onClose, bus }: BookingModalProps
                   </div>
                 </div>
 
-                {/* Payment Method */}
-                <h4 className="text-sm font-bold text-slate-900 mb-3">
-                  Select Payment Method
-                </h4>
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <label className="cursor-pointer">
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="airtel"
-                      checked={paymentMethod === 'airtel'}
-                      onChange={() => setPaymentMethod('airtel')}
-                      className="peer sr-only"
-                    />
-                    <div className="rounded-xl border-2 border-slate-200 p-3 md:p-4 hover:bg-red-50 hover:border-red-200 peer-checked:border-red-500 peer-checked:bg-red-50 transition-all flex flex-col items-center gap-2 h-full">
-                      <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center text-white font-bold text-xs">
-                        Ar
-                      </div>
-                      <span className="text-xs font-bold text-slate-700">
-                        Airtel Money
-                      </span>
+                {/* Passenger Details Section */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-bold text-slate-900 mb-4">
+                    Passenger Details
+                  </h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1.5">
+                        Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={passengerName}
+                        onChange={(e) => setPassengerName(e.target.value)}
+                        placeholder="Enter your full name"
+                        className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                        required
+                      />
                     </div>
-                  </label>
-                  <label className="cursor-pointer">
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="mtn"
-                      checked={paymentMethod === 'mtn'}
-                      onChange={() => setPaymentMethod('mtn')}
-                      className="peer sr-only"
-                    />
-                    <div className="rounded-xl border-2 border-slate-200 p-3 md:p-4 hover:bg-yellow-50 hover:border-yellow-200 peer-checked:border-yellow-400 peer-checked:bg-yellow-50 transition-all flex flex-col items-center gap-2 h-full">
-                      <div className="w-8 h-8 bg-yellow-400 rounded flex items-center justify-center text-slate-900 font-bold text-xs">
-                        MT
-                      </div>
-                      <span className="text-xs font-bold text-slate-700">MTN MoMo</span>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1.5">
+                        Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        placeholder="097 123 4567"
+                        className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                        required
+                      />
                     </div>
-                  </label>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1.5">
+                        Email (optional)
+                      </label>
+                      <input
+                        type="email"
+                        value={passengerEmail}
+                        onChange={(e) => setPassengerEmail(e.target.value)}
+                        placeholder="your@email.com"
+                        className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                {/* Passenger Details */}
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
-                      Full Name *
+                {/* Payment Method Section */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-bold text-slate-900 mb-4">
+                    Choose Payment Method
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Airtel Money */}
+                    <label className="cursor-pointer">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="airtel"
+                        checked={paymentMethod === 'airtel'}
+                        onChange={() => setPaymentMethod('airtel')}
+                        className="peer sr-only"
+                      />
+                      <div className="rounded-xl border-2 border-slate-200 p-4 hover:bg-red-50 hover:border-red-300 peer-checked:border-red-500 peer-checked:bg-red-50 peer-checked:ring-2 peer-checked:ring-red-500/20 transition-all h-full">
+                        <div className="flex flex-col items-center gap-2.5">
+                          <div className="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                            <span>Ar</span>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-bold text-slate-900">Airtel Money</p>
+                            <p className="text-xs text-slate-500 mt-1">Dial *778#</p>
+                          </div>
+                        </div>
+                      </div>
                     </label>
-                    <input
-                      type="text"
-                      value={passengerName}
-                      onChange={(e) => setPassengerName(e.target.value)}
-                      placeholder="Enter your full name"
-                      className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent"
-                      required
-                    />
-                  </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
-                      Phone Number *
+                    {/* MTN MoMo */}
+                    <label className="cursor-pointer">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="mtn"
+                        checked={paymentMethod === 'mtn'}
+                        onChange={() => setPaymentMethod('mtn')}
+                        className="peer sr-only"
+                      />
+                      <div className="rounded-xl border-2 border-slate-200 p-4 hover:bg-yellow-50 hover:border-yellow-300 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 peer-checked:ring-2 peer-checked:ring-yellow-500/20 transition-all h-full">
+                        <div className="flex flex-col items-center gap-2.5">
+                          <div className="w-12 h-12 bg-yellow-400 rounded-lg flex items-center justify-center text-slate-900 font-bold text-lg shadow-lg">
+                            <span>MT</span>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-bold text-slate-900">MTN MoMo</p>
+                            <p className="text-xs text-slate-500 mt-1">Dial *303#</p>
+                          </div>
+                        </div>
+                      </div>
                     </label>
-                    <input
-                      type="tel"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="097 123 4567"
-                      className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
-                      Email (optional)
-                    </label>
-                    <input
-                      type="email"
-                      value={passengerEmail}
-                      onChange={(e) => setPassengerEmail(e.target.value)}
-                      placeholder="your@email.com"
-                      className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent"
-                    />
                   </div>
                 </div>
 
                 {/* Payment Instructions */}
-                <div className="bg-slate-100 rounded-lg p-4 text-sm text-slate-600 mb-4 border border-slate-200">
-                  <p className="font-bold mb-2 text-slate-800">Payment Instructions:</p>
-                  <ol className="list-decimal list-inside space-y-1">
-                    {getInstructions().map((instruction, idx) => (
-                      <li key={idx} dangerouslySetInnerHTML={{ __html: instruction }} />
-                    ))}
-                  </ol>
-                </div>
+                <motion.div
+                  key={paymentMethod}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                  className={`rounded-xl p-4 mb-4 border-2 ${
+                    paymentMethod === 'airtel'
+                      ? 'bg-red-50 border-red-200'
+                      : 'bg-yellow-50 border-yellow-200'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white text-sm font-bold ${
+                      paymentMethod === 'airtel'
+                        ? 'bg-red-600'
+                        : 'bg-yellow-500'
+                    }`}>
+                      ⓘ
+                    </div>
+                    <div className="flex-1">
+                      <p className={`text-sm font-bold mb-2 ${
+                        paymentMethod === 'airtel'
+                          ? 'text-red-900'
+                          : 'text-yellow-900'
+                      }`}>
+                        How to pay with {paymentMethod === 'airtel' ? 'Airtel Money' : 'MTN MoMo'}
+                      </p>
+                      <ol className={`text-xs space-y-1.5 ${
+                        paymentMethod === 'airtel'
+                          ? 'text-red-800'
+                          : 'text-yellow-800'
+                      }`}>
+                        {getInstructions().map((instruction, idx) => (
+                          <li key={idx} className="flex gap-2">
+                            <span className="font-bold min-w-fit">{idx + 1}.</span>
+                            <span dangerouslySetInnerHTML={{ __html: instruction }} />
+                          </li>
+                        ))}
+                      </ol>
+                      <div className={`mt-3 p-2 rounded text-xs ${
+                        paymentMethod === 'airtel'
+                          ? 'bg-red-100 text-red-900'
+                          : 'bg-yellow-100 text-yellow-900'
+                      }`}>
+                        <p className="font-semibold">Total Amount: <span className="text-lg">K{bus.price}</span></p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
 
               {/* Success State */}

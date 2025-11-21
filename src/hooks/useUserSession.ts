@@ -78,6 +78,12 @@ export function useUserSession() {
     return session ? !!session.phone : false;
   };
 
+  const getFirstName = () => {
+    if (!session || !session.name) return 'User';
+    const nameParts = session.name.split(' ');
+    return nameParts[0];
+  };
+
   const clearSession = () => {
     localStorage.removeItem(STORAGE_KEY);
     setSession(null);
@@ -91,6 +97,7 @@ export function useUserSession() {
     canSearch,
     needsRegistration,
     isRegistered,
+    getFirstName,
     clearSession,
   };
 }

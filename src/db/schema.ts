@@ -187,6 +187,25 @@ export const bookingAttempts = pgTable('booking_attempts', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+// Promotions Table
+export const promotions = pgTable('promotions', {
+  id: serial('id').primaryKey(),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  discountPercent: decimal('discount_percent', { precision: 5, scale: 2 }),
+  discountAmount: decimal('discount_amount', { precision: 10, scale: 2 }),
+  code: varchar('code', { length: 50 }).unique(),
+  applicableRoutes: text('applicable_routes'), // JSON array of route IDs
+  startDate: timestamp('start_date').notNull(),
+  endDate: timestamp('end_date').notNull(),
+  isActive: boolean('is_active').default(true),
+  priority: integer('priority').default(0), // For ordering on landing page
+  imageUrl: varchar('image_url', { length: 500 }),
+  badge: varchar('badge', { length: 50 }), // e.g., "Limited Time", "New Users Only"
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 // Relations for new tables
 export const bookingAttemptsRelations = relations(bookingAttempts, ({ one }) => ({
   bus: one(buses, {
@@ -216,3 +235,5 @@ export type PageView = typeof pageViews.$inferSelect;
 export type NewPageView = typeof pageViews.$inferInsert;
 export type BookingAttempt = typeof bookingAttempts.$inferSelect;
 export type NewBookingAttempt = typeof bookingAttempts.$inferInsert;
+export type Promotion = typeof promotions.$inferSelect;
+export type NewPromotion = typeof promotions.$inferInsert;

@@ -8,6 +8,8 @@ import Hero from '@/components/Hero';
 import BusCard from '@/components/BusCard';
 import BookingModal from '@/components/BookingModal';
 import RegistrationModal from '@/components/RegistrationModal';
+import PromotionsBanner from '@/components/PromotionsBanner';
+import TrendingDestinations from '@/components/TrendingDestinations';
 import Footer from '@/components/Footer';
 import { useUserSession } from '@/hooks/useUserSession';
 import { useBookingNotifications } from '@/hooks/useBookingNotifications';
@@ -158,7 +160,23 @@ export default function Home() {
         <Hero onSearch={handleSearch} />
 
         {/* Main Content */}
-        <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 md:pt-20 pb-12 w-full">
+        <main className="flex-grow w-full">
+          {/* Promotions Banner Section */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 md:pt-16 pb-8">
+            <PromotionsBanner onPromoClick={() => {
+              // Scroll to search or handle promo click
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }} />
+          </div>
+
+          {/* Trending Destinations Section */}
+          <TrendingDestinations onDestinationClick={(destination) => {
+            setSearchDestination(destination);
+            handleSearch(destination, '');
+          }} />
+
+          {/* Popular Routes Section */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 md:pt-20 pb-12">
           {/* Section Header with Filters */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8 gap-4">
             <div>
@@ -370,6 +388,7 @@ export default function Home() {
                 </form>
               </div>
             </div>
+          </div>
           </div>
         </main>
 
