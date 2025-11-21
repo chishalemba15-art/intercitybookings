@@ -1,13 +1,6 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Toaster } from 'react-hot-toast';
 import './globals.css';
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-  weight: ['300', '400', '500', '600', '700', '800'],
-});
 
 export const metadata: Metadata = {
   title: 'IntercityBookings | Fast Bus Tickets in Zambia',
@@ -44,8 +37,32 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className={`${inter.className} antialiased`}>{children}</body>
+    <html lang="en">
+      <body className="font-sans antialiased">
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#fff',
+              color: '#0f172a',
+            },
+            success: {
+              iconTheme: {
+                primary: '#10b981',
+                secondary: '#fff',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }
