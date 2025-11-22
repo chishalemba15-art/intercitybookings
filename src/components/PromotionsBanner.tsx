@@ -197,7 +197,7 @@ export default function PromotionsBanner({ onPromoClick }: PromotionsBannerProps
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={onPromoClick}
-              className="bg-white text-brand-primary hover:bg-slate-50 font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all whitespace-nowrap text-sm sm:text-base flex items-center gap-2"
+              className="bg-white dark:bg-slate-800 text-brand-primary dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all whitespace-nowrap text-sm sm:text-base flex items-center gap-2"
             >
               <span>Book Now</span>
               <svg

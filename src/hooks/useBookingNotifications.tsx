@@ -20,13 +20,18 @@ interface UseBookingNotificationsProps {
   onBookingClick?: () => void;
 }
 
-export function useBookingNotifications({
-  enabled = true,
-  onBookingClick
-}: UseBookingNotificationsProps | boolean = {}) {
+export function useBookingNotifications(props: UseBookingNotificationsProps | boolean = {}) {
   // Handle backward compatibility - if boolean is passed, convert to object
-  const enabledValue = typeof enabled === 'boolean' ? enabled : (enabled as UseBookingNotificationsProps).enabled ?? true;
-  const onBookingClickValue = typeof enabled === 'object' ? (enabled as UseBookingNotificationsProps).onBookingClick : onBookingClick;
+  let enabledValue = true;
+  let onBookingClickValue: (() => void) | undefined;
+
+  if (typeof props === 'boolean') {
+    enabledValue = props;
+  } else {
+    const propObject = props as UseBookingNotificationsProps;
+    enabledValue = propObject.enabled ?? true;
+    onBookingClickValue = propObject.onBookingClick;
+  }
 
   const [latestBookings, setLatestBookings] = useState<RecentBooking[]>([]);
   const seenBookingIds = useRef<Set<number>>(new Set());

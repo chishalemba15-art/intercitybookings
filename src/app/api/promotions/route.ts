@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
     const now = new Date();
 
-    let query = db
+    const baseQuery = db
       .select()
       .from(promotions)
       .where(
@@ -20,16 +20,12 @@ export async function GET(request: NextRequest) {
           gte(promotions.endDate, now),
           lte(promotions.startDate, now)
         )
-      );
+      )
+      .orderBy(promotions.priority);
 
-    if (featured) {
-      // Get top priority promotion for banner
-      query = query.orderBy(promotions.priority).limit(1);
-    } else {
-      query = query.orderBy(promotions.priority).limit(limit);
-    }
-
-    const result = await query;
+    const result = featured
+      ? await baseQuery.limit(1)
+      : await baseQuery.limit(limit);
 
     // Transform results
     const transformedPromotions = result.map((promo) => ({

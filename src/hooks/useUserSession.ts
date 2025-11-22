@@ -10,7 +10,7 @@ interface UserSession {
 }
 
 const STORAGE_KEY = 'intercity_user_session';
-const MAX_FREE_SEARCHES = 1;
+const MAX_FREE_SEARCHES = 2; // Allow 2 free searches before requiring login
 
 export function useUserSession() {
   const [session, setSession] = useState<UserSession | null>(null);
@@ -34,6 +34,8 @@ export function useUserSession() {
   const saveSession = (sessionData: UserSession) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionData));
     setSession(sessionData);
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('sessionUpdate', { detail: sessionData }));
   };
 
   const register = (name: string, phone: string) => {

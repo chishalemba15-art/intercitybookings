@@ -6,9 +6,10 @@ import { useUserSession } from '@/hooks/useUserSession';
 
 interface NavbarProps {
   onNotificationClick?: () => void;
+  onSettingsClick?: () => void;
 }
 
-export default function Navbar({ onNotificationClick }: NavbarProps) {
+export default function Navbar({ onNotificationClick, onSettingsClick }: NavbarProps) {
   const [location, setLocation] = useState<string>('Locating...');
   const [scrolled, setScrolled] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -33,6 +34,17 @@ export default function Navbar({ onNotificationClick }: NavbarProps) {
     }
   }, []);
 
+  // Update navbar when session changes
+  useEffect(() => {
+    const handleSessionUpdate = () => {
+      // Force component to re-evaluate the session via the hook
+      // This will trigger a re-render since the hook's state updates
+    };
+
+    window.addEventListener('sessionUpdate', handleSessionUpdate);
+    return () => window.removeEventListener('sessionUpdate', handleSessionUpdate);
+  }, []);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -54,8 +66,8 @@ export default function Navbar({ onNotificationClick }: NavbarProps) {
       transition={{ duration: 0.5, ease: 'easeOut' }}
       className={`sticky top-0 z-30 backdrop-blur-md transition-all duration-300 ${
         scrolled
-          ? 'bg-white/90 shadow-lg border-b border-slate-200'
-          : 'bg-white/70 border-b border-slate-100'
+          ? 'bg-white/90 dark:bg-slate-900/90 shadow-lg border-b border-slate-200 dark:border-slate-800'
+          : 'bg-white/70 dark:bg-slate-900/70 border-b border-slate-100 dark:border-slate-800'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -96,7 +108,7 @@ export default function Navbar({ onNotificationClick }: NavbarProps) {
           {/* Location & Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
             {/* Location Badge - Hidden on small screens */}
-            <div className="hidden md:flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold border border-blue-100">
+            <div className="hidden md:flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1.5 rounded-full text-xs font-semibold border border-blue-100 dark:border-blue-800">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -120,12 +132,12 @@ export default function Navbar({ onNotificationClick }: NavbarProps) {
             </div>
 
             {/* Notifications */}
-            {isRegistered && (
+            {isRegistered() && (
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onNotificationClick}
-                className="relative p-2 text-slate-400 hover:text-brand-primary transition-colors rounded-full hover:bg-slate-100"
+                className="relative p-2 text-slate-400 dark:text-slate-500 hover:text-brand-primary dark:hover:text-brand-primary transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
                 aria-label="View my bookings"
                 title="View my bookings and activities"
               >
@@ -148,7 +160,7 @@ export default function Navbar({ onNotificationClick }: NavbarProps) {
             )}
 
             {/* User Profile / Support */}
-            {isRegistered ? (
+            {isRegistered() ? (
               <div className="relative" ref={dropdownRef}>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -180,38 +192,43 @@ export default function Navbar({ onNotificationClick }: NavbarProps) {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 overflow-hidden z-50"
+                      className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50"
                     >
-                      <div className="px-4 py-3 border-b border-slate-100">
-                        <p className="text-xs text-slate-500 uppercase tracking-wide font-semibold">Account</p>
-                        <p className="text-sm font-semibold text-slate-900 mt-1">{getFirstName()}</p>
+                      <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold">Account</p>
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white mt-1">{getFirstName()}</p>
                       </div>
                       <button
                         onClick={() => {
                           setDropdownOpen(false);
                           onNotificationClick?.();
                         }}
-                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors font-medium flex items-center gap-2">
+                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-medium flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12a9.75 9.75 0 1119.5 0 9.75 9.75 0 01-19.5 0z" />
                         </svg>
                         My Bookings
                       </button>
-                      <button className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors font-medium flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          onSettingsClick?.();
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-medium flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.122.124l1.149-.369c.473-.151.905.159 1.08.63l.296.954c.177.567-.04 1.194-.527 1.437l-.908.606c-.272.182-.497.537-.497.934v.231c0 .397.225.752.497.934l.908.606c.486.243.704.87.527 1.437l-.296.954c-.176.471-.607.781-1.08.63l-1.149-.369c-.402-.133-.798-.072-1.122.124-.073.044-.146.087-.22.127-.332.184-.582.496-.645.87l-.213 1.281c-.09.542-.56.94-1.11.94h-2.592c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a12.966 12.966 0 01-.22-.127c-.324-.196-.72-.257-1.122-.124l-1.149.369c-.473.151-.905-.159-1.08-.63l-.296-.954c-.177-.567.04-1.194.527-1.437l.908-.606c.272-.182.497-.537.497-.934v-.231c0-.397-.225-.752-.497-.934l-.908-.606c-.486-.243-.704-.87-.527-1.437l.296-.954c.176-.471.607-.781 1.08-.63l1.149.369c.402.133.798.072 1.122-.124.073-.044.146-.087.22-.127.332-.184.582-.496.645-.87l.213-1.281z" />
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                         Settings
                       </button>
-                      <div className="border-t border-slate-100">
+                      <div className="border-t border-slate-100 dark:border-slate-700">
                         <button
                           onClick={() => {
                             clearSession();
                             setDropdownOpen(false);
                             window.location.reload();
                           }}
-                          className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium flex items-center gap-2"
+                          className="w-full text-left px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors font-medium flex items-center gap-2"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0110.5 3h6a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0116.5 21h-6a2.25 2.25 0 01-2.25-2.25V15m-3 0l3-3m0 0l3 3m-3-3v6m0 0H3.75" />

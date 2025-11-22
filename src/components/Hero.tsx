@@ -130,7 +130,7 @@ export default function Hero({ onSearch }: HeroProps) {
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.6 }}
-          className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl shadow-slate-900/20 p-3 md:p-5 flex flex-col md:flex-row gap-3 transform translate-y-8 border border-slate-100"
+          className="w-full max-w-4xl bg-white dark:bg-slate-800 rounded-2xl shadow-2xl shadow-slate-900/20 p-3 md:p-5 flex flex-col md:flex-row gap-3 transform translate-y-8 border border-slate-100 dark:border-slate-700"
         >
           {/* Destination Input with Suggestions */}
           <div className="flex-1 relative group" ref={suggestionsRef}>
@@ -161,7 +161,7 @@ export default function Hero({ onSearch }: HeroProps) {
               onChange={(e) => setDestination(e.target.value)}
               onFocus={() => destination.length > 0 && setShowSuggestions(true)}
               placeholder="Destination (e.g. Kitwe)"
-              className="block w-full pl-11 pr-4 py-3 md:py-3.5 border border-slate-200 rounded-xl text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all bg-slate-50 focus:bg-white text-sm md:text-base"
+              className="block w-full pl-11 pr-4 py-3 md:py-3.5 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white font-medium placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all bg-slate-50 dark:bg-slate-700 focus:bg-white dark:focus:bg-slate-600 text-sm md:text-base"
             />
 
             {/* Suggestions Dropdown */}
@@ -172,17 +172,17 @@ export default function Hero({ onSearch }: HeroProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden"
+                  className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl z-50 overflow-hidden"
                 >
                   {suggestions.map((suggestion, index) => (
                     <button
                       key={index}
                       onClick={() => handleSuggestionClick(suggestion)}
-                      className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0 flex items-center justify-between group"
+                      className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors border-b border-slate-100 dark:border-slate-600 last:border-b-0 flex items-center justify-between group"
                     >
                       <div className="flex flex-col">
-                        <span className="font-semibold text-slate-900 text-sm">{suggestion.name}</span>
-                        <span className="text-xs text-slate-500">
+                        <span className="font-semibold text-slate-900 dark:text-white text-sm">{suggestion.name}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
                           {suggestion.searchCount} searches •
                           {suggestion.cheapestPrice ? ` from K${suggestion.cheapestPrice.toFixed(2)}` : ' No price data'}
                         </span>
@@ -200,8 +200,8 @@ export default function Hero({ onSearch }: HeroProps) {
 
             {/* Loading State */}
             {loading && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 px-4 py-3">
-                <span className="text-sm text-slate-500 flex items-center gap-2">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl z-50 px-4 py-3">
+                <span className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-brand-primary animate-pulse"></div>
                   Finding destinations...
                 </span>
@@ -232,7 +232,7 @@ export default function Hero({ onSearch }: HeroProps) {
               value={date}
               onChange={(e) => setDate(e.target.value)}
               min={new Date().toISOString().split('T')[0]}
-              className="block w-full pl-11 pr-4 py-3 md:py-3.5 border border-slate-200 rounded-xl text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all bg-slate-50 focus:bg-white text-sm md:text-base"
+              className="block w-full pl-11 pr-4 py-3 md:py-3.5 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all bg-slate-50 dark:bg-slate-700 focus:bg-white dark:focus:bg-slate-600 text-sm md:text-base"
             />
           </div>
 

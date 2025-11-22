@@ -11,6 +11,8 @@ import RegistrationModal from '@/components/RegistrationModal';
 import PromotionsBanner from '@/components/PromotionsBanner';
 import TrendingDestinations from '@/components/TrendingDestinations';
 import UserBookingsModal from '@/components/UserBookingsModal';
+import SettingsModal from '@/components/SettingsModal';
+import GiveawayPromos from '@/components/GiveawayPromos';
 import Footer from '@/components/Footer';
 import { useUserSession } from '@/hooks/useUserSession';
 import { useBookingNotifications } from '@/hooks/useBookingNotifications';
@@ -48,6 +50,7 @@ export default function Home() {
   const [feedbackRating, setFeedbackRating] = useState<number>(5);
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
   const [isBookingsModalOpen, setIsBookingsModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   // Use custom hooks
   const { session, register, incrementSearchCount, needsRegistration, isRegistered } = useUserSession();
@@ -115,18 +118,6 @@ export default function Home() {
   };
 
   const handleSearch = async (destination: string, date: string) => {
-    // Check if user needs to register first
-    if (needsRegistration()) {
-      setSearchDestination(destination);
-      setSearchDate(date);
-      setIsRegistrationModalOpen(true);
-      toast.error('Please register to continue searching', {
-        icon: '🔒',
-        duration: 4000,
-      });
-      return;
-    }
-
     // Increment search count
     incrementSearchCount();
 
@@ -154,8 +145,28 @@ export default function Home() {
     setTimeout(() => setSelectedBus(null), 300);
   };
 
-  const handleRegistration = (name: string, phone: string) => {
+  const handleRegistration = async (name: string, phone: string, city?: string) => {
     register(name, phone);
+
+    // Save user location if city is provided
+    if (city) {
+      try {
+        await fetch('/api/user-locations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userPhone: phone,
+            userName: name,
+            city: city,
+            locationType: 'residence',
+          }),
+        });
+      } catch (error) {
+        console.error('Error saving user location:', error);
+        // Don't fail registration if location save fails
+      }
+    }
+
     setIsRegistrationModalOpen(false);
     hasShownWelcome.current = true;
 
@@ -163,10 +174,13 @@ export default function Home() {
       duration: 4000,
     });
 
-    // Continue with the search after registration
-    if (searchDestination || searchDate) {
-      handleSearch(searchDestination, searchDate);
-    }
+    // Small delay to allow state to update before navigation
+    setTimeout(() => {
+      // Continue with the search after registration
+      if (searchDestination || searchDate) {
+        handleSearch(searchDestination, searchDate);
+      }
+    }, 100);
   };
 
   const handleFeedbackSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -217,7 +231,10 @@ export default function Home() {
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
 
       <div className="min-h-screen flex flex-col">
-        <Navbar onNotificationClick={() => setIsBookingsModalOpen(true)} />
+        <Navbar
+          onNotificationClick={() => setIsBookingsModalOpen(true)}
+          onSettingsClick={() => setIsSettingsModalOpen(true)}
+        />
         <Hero onSearch={handleSearch} />
 
         {/* Main Content */}
@@ -492,6 +509,9 @@ export default function Home() {
             </div>
           </div>
           </div>
+
+          {/* Giveaway Promotions Section - Bottom */}
+          <GiveawayPromos />
         </main>
 
         <Footer />
@@ -539,6 +559,12 @@ export default function Home() {
           isOpen={isBookingsModalOpen}
           onClose={() => setIsBookingsModalOpen(false)}
           userPhone={session?.phone || ''}
+        />
+
+        {/* Settings Modal */}
+        <SettingsModal
+          isOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
         />
       </div>
     </>

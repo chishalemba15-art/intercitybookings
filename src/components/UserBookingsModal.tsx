@@ -147,7 +147,7 @@ export default function UserBookingsModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm"
+            className="fixed inset-0 bg-slate-900/70 dark:bg-slate-950/80 backdrop-blur-sm"
           />
 
           {/* Modal */}
@@ -157,7 +157,7 @@ export default function UserBookingsModal({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: 'spring', duration: 0.5 }}
-              className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all w-full max-w-4xl mx-4"
+              className="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 text-left shadow-2xl transition-all w-full max-w-4xl mx-4"
             >
               {/* Header */}
               <div className="bg-gradient-to-r from-brand-primary to-blue-600 px-6 py-6 flex justify-between items-center">

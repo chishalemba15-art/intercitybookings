@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { routes, searchAnalytics, buses } from '@/db/schema';
-import { like, sql } from 'drizzle-orm';
+import { like, sql, eq } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,9 +17,9 @@ export async function GET(request: NextRequest) {
       })
       .from(routes)
       .leftJoin(searchAnalytics, (qb) =>
-        qb.eq(routes.toCity, searchAnalytics.destination)
+        eq(routes.toCity, searchAnalytics.destination)
       )
-      .leftJoin(buses, (qb) => qb.eq(routes.id, buses.routeId))
+      .leftJoin(buses, (qb) => eq(routes.id, buses.routeId))
       .where(
         query
           ? like(routes.toCity, `%${query}%`)

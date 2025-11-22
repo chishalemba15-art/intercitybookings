@@ -40,12 +40,12 @@ export default function TrendingDestinations({ onDestinationClick }: TrendingDes
 
   if (loading) {
     return (
-      <section className="py-12 md:py-16 px-4 bg-gradient-to-b from-slate-50 to-white">
+      <section className="py-12 md:py-16 px-4 bg-gradient-to-b from-slate-50 dark:from-slate-900 to-white dark:to-slate-950">
         <div className="max-w-7xl mx-auto">
-          <div className="h-8 bg-slate-200 rounded w-48 mb-8 animate-pulse"></div>
+          <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-48 mb-8 animate-pulse"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-32 bg-slate-200 rounded-lg animate-pulse"></div>
+              <div key={i} className="h-32 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse"></div>
             ))}
           </div>
         </div>
@@ -58,7 +58,7 @@ export default function TrendingDestinations({ onDestinationClick }: TrendingDes
   }
 
   return (
-    <section className="py-12 md:py-16 px-4 bg-gradient-to-b from-slate-50 to-white">
+    <section className="py-12 md:py-16 px-4 bg-gradient-to-b from-slate-50 dark:from-slate-900 to-white dark:to-slate-950">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8 md:mb-10">
@@ -68,10 +68,10 @@ export default function TrendingDestinations({ onDestinationClick }: TrendingDes
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-2xl md:text-4xl font-bold text-slate-900 mb-3">
+            <h2 className="text-2xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3">
               Trending Destinations
             </h2>
-            <p className="text-slate-600 max-w-2xl">
+            <p className="text-slate-600 dark:text-slate-400 max-w-2xl">
               Most popular routes this week. Book your trip to the most searched destinations.
             </p>
           </motion.div>
@@ -88,7 +88,7 @@ export default function TrendingDestinations({ onDestinationClick }: TrendingDes
               transition={{ duration: 0.5, delay: index * 0.1 }}
               whileHover={{ y: -4 }}
               onClick={() => onDestinationClick(route.to)}
-              className="text-left bg-white border border-slate-200 rounded-lg p-5 hover:shadow-lg hover:border-brand-primary/20 transition-all group relative overflow-hidden"
+              className="text-left bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-5 hover:shadow-lg hover:border-brand-primary/20 transition-all group relative overflow-hidden"
             >
               {/* Background Accent */}
               <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-brand-primary/5 to-transparent rounded-bl-3xl"></div>
@@ -105,12 +105,12 @@ export default function TrendingDestinations({ onDestinationClick }: TrendingDes
 
               <div className="relative z-10">
                 {/* Route */}
-                <h3 className="text-lg font-bold text-slate-900 mb-1 group-hover:text-brand-primary transition-colors">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-brand-primary transition-colors">
                   {route.from} → {route.to}
                 </h3>
 
                 {/* Stats */}
-                <div className="flex items-center gap-3 mb-4 text-sm text-slate-600">
+                <div className="flex items-center gap-3 mb-4 text-sm text-slate-600 dark:text-slate-400">
                   <div className="flex items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.5 5.5a7.5 7.5 0 0010.5 10.5z" />
@@ -126,14 +126,14 @@ export default function TrendingDestinations({ onDestinationClick }: TrendingDes
                 </div>
 
                 {/* Price & CTA */}
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-700">
                   {route.cheapestPrice ? (
                     <div className="flex flex-col">
-                      <span className="text-xs text-slate-500">Starting from</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Starting from</span>
                       <span className="text-lg font-bold text-brand-primary">K{route.cheapestPrice.toFixed(2)}</span>
                     </div>
                   ) : (
-                    <span className="text-sm text-slate-500">View prices</span>
+                    <span className="text-sm text-slate-500 dark:text-slate-400">View prices</span>
                   )}
 
                   <div className="bg-brand-primary/10 text-brand-primary p-2 rounded-lg group-hover:bg-brand-primary group-hover:text-white transition-all">

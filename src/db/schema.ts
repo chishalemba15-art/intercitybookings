@@ -214,6 +214,98 @@ export const bookingAttemptsRelations = relations(bookingAttempts, ({ one }) => 
   }),
 }));
 
+// Giveaway Tables
+export const promotionGiveaways = pgTable('promotion_giveaways', {
+  id: serial('id').primaryKey(),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  prizeType: varchar('prize_type', { length: 100 }).notNull(),
+  prizeDetails: text('prize_details'),
+  prizeValue: decimal('prize_value', { precision: 10, scale: 2 }),
+  drawDate: timestamp('draw_date').notNull(),
+  drawTime: varchar('draw_time', { length: 8 }).default('18:00:00'),
+  startDate: timestamp('start_date').notNull(),
+  endDate: timestamp('end_date').notNull(),
+  eligibilityRequirement: varchar('eligibility_requirement', { length: 100 }).default('first_booking'),
+  winnersCount: integer('winners_count').default(3),
+  status: varchar('status', { length: 20 }).default('upcoming'),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const giveawayEntries = pgTable('giveaway_entries', {
+  id: serial('id').primaryKey(),
+  giveawayId: integer('giveaway_id').references(() => promotionGiveaways.id).notNull(),
+  userId: integer('user_id'),
+  userPhone: varchar('user_phone', { length: 20 }).notNull(),
+  bookingId: integer('booking_id'),
+  entryDate: timestamp('entry_date').defaultNow(),
+  winner: boolean('winner').default(false),
+  claimed: boolean('claimed').default(false),
+  claimedDate: timestamp('claimed_date'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const giveawayWinners = pgTable('giveaway_winners', {
+  id: serial('id').primaryKey(),
+  giveawayId: integer('giveaway_id').references(() => promotionGiveaways.id).notNull(),
+  entryId: integer('entry_id').references(() => giveawayEntries.id).notNull(),
+  userPhone: varchar('user_phone', { length: 20 }).notNull(),
+  prizeType: varchar('prize_type', { length: 100 }),
+  prizeValue: decimal('prize_value', { precision: 10, scale: 2 }),
+  notificationSent: boolean('notification_sent').default(false),
+  notificationDate: timestamp('notification_date'),
+  claimCode: varchar('claim_code', { length: 50 }).unique(),
+  claimed: boolean('claimed').default(false),
+  claimedDate: timestamp('claimed_date'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Relations for giveaways
+export const promotionGiveawaysRelations = relations(promotionGiveaways, ({ many }) => ({
+  entries: many(giveawayEntries),
+  winners: many(giveawayWinners),
+}));
+
+export const giveawayEntriesRelations = relations(giveawayEntries, ({ one }) => ({
+  giveaway: one(promotionGiveaways, {
+    fields: [giveawayEntries.giveawayId],
+    references: [promotionGiveaways.id],
+  }),
+}));
+
+export const giveawayWinnersRelations = relations(giveawayWinners, ({ one }) => ({
+  giveaway: one(promotionGiveaways, {
+    fields: [giveawayWinners.giveawayId],
+    references: [promotionGiveaways.id],
+  }),
+  entry: one(giveawayEntries, {
+    fields: [giveawayWinners.entryId],
+    references: [giveawayEntries.id],
+  }),
+}));
+
+// User Locations Table
+export const userLocations = pgTable('user_locations', {
+  id: serial('id').primaryKey(),
+  userPhone: varchar('user_phone', { length: 20 }).notNull(),
+  userName: varchar('user_name', { length: 255 }),
+  city: varchar('city', { length: 100 }).notNull(),
+  latitude: decimal('latitude', { precision: 10, scale: 8 }),
+  longitude: decimal('longitude', { precision: 11, scale: 8 }),
+  address: text('address'),
+  locationType: varchar('location_type', { length: 50 }).default('residence'), // 'residence', 'workplace', 'favorite', etc.
+  lastAccessedAt: timestamp('last_accessed_at').defaultNow(),
+  accessCount: integer('access_count').default(1),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const userLocationsRelations = relations(userLocations, ({ many }) => ({
+  bookings: many(bookings),
+}));
+
 // Type exports
 export type Operator = typeof operators.$inferSelect;
 export type NewOperator = typeof operators.$inferInsert;
@@ -237,3 +329,11 @@ export type BookingAttempt = typeof bookingAttempts.$inferSelect;
 export type NewBookingAttempt = typeof bookingAttempts.$inferInsert;
 export type Promotion = typeof promotions.$inferSelect;
 export type NewPromotion = typeof promotions.$inferInsert;
+export type PromotionGiveaway = typeof promotionGiveaways.$inferSelect;
+export type NewPromotionGiveaway = typeof promotionGiveaways.$inferInsert;
+export type GiveawayEntry = typeof giveawayEntries.$inferSelect;
+export type NewGiveawayEntry = typeof giveawayEntries.$inferInsert;
+export type GiveawayWinner = typeof giveawayWinners.$inferSelect;
+export type NewGiveawayWinner = typeof giveawayWinners.$inferInsert;
+export type UserLocation = typeof userLocations.$inferSelect;
+export type NewUserLocation = typeof userLocations.$inferInsert;
