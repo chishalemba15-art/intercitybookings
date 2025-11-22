@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import SplashScreen from '@/components/SplashScreen';
 import Navbar from '@/components/Navbar';
@@ -8,6 +8,11 @@ import Hero from '@/components/Hero';
 import BusCard from '@/components/BusCard';
 import BookingModal from '@/components/BookingModal';
 import RegistrationModal from '@/components/RegistrationModal';
+import PromotionsBanner from '@/components/PromotionsBanner';
+import TrendingDestinations from '@/components/TrendingDestinations';
+import UserBookingsModal from '@/components/UserBookingsModal';
+import SettingsModal from '@/components/SettingsModal';
+import GiveawayPromos from '@/components/GiveawayPromos';
 import Footer from '@/components/Footer';
 import { useUserSession } from '@/hooks/useUserSession';
 import { useBookingNotifications } from '@/hooks/useBookingNotifications';
@@ -41,22 +46,39 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchDestination, setSearchDestination] = useState('');
   const [searchDate, setSearchDate] = useState('');
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [feedbackRating, setFeedbackRating] = useState<number>(5);
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
+  const [isBookingsModalOpen, setIsBookingsModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   // Use custom hooks
   const { session, register, incrementSearchCount, needsRegistration, isRegistered } = useUserSession();
-  const { latestBookings } = useBookingNotifications(true);
+  const { latestBookings } = useBookingNotifications({
+    enabled: true,
+    onBookingClick: () => setIsBookingsModalOpen(true),
+  });
 
   // Load buses on mount
   useEffect(() => {
     loadBuses();
   }, []);
 
-  // Show welcome message for registered users
+  // Show welcome message for registered users (only on first render after registration)
+  const hasShownWelcome = useRef(false);
+
   useEffect(() => {
-    if (session && session.name && !showSplash) {
-      toast.success(`Welcome back, ${session.name.split(' ')[0]}! 👋`, {
-        duration: 3000,
-      });
+    if (session && session.name && !showSplash && !hasShownWelcome.current) {
+      // Only show welcome message once
+      const wasJustRegistered = session.registeredAt &&
+        (Date.now() - new Date(session.registeredAt).getTime()) < 5000;
+
+      if (wasJustRegistered) {
+        toast.success(`Welcome, ${session.name.split(' ')[0]}! 🎉`, {
+          duration: 3000,
+        });
+        hasShownWelcome.current = true;
+      }
     }
   }, [session, showSplash]);
 
@@ -96,18 +118,6 @@ export default function Home() {
   };
 
   const handleSearch = async (destination: string, date: string) => {
-    // Check if user needs to register first
-    if (needsRegistration()) {
-      setSearchDestination(destination);
-      setSearchDate(date);
-      setIsRegistrationModalOpen(true);
-      toast.error('Please register to continue searching', {
-        icon: '🔒',
-        duration: 4000,
-      });
-      return;
-    }
-
     // Increment search count
     incrementSearchCount();
 
@@ -135,17 +145,84 @@ export default function Home() {
     setTimeout(() => setSelectedBus(null), 300);
   };
 
-  const handleRegistration = (name: string, phone: string) => {
+  const handleRegistration = async (name: string, phone: string, city?: string) => {
     register(name, phone);
+
+    // Save user location if city is provided
+    if (city) {
+      try {
+        await fetch('/api/user-locations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userPhone: phone,
+            userName: name,
+            city: city,
+            locationType: 'residence',
+          }),
+        });
+      } catch (error) {
+        console.error('Error saving user location:', error);
+        // Don't fail registration if location save fails
+      }
+    }
+
     setIsRegistrationModalOpen(false);
+    hasShownWelcome.current = true;
 
     toast.success(`Welcome, ${name.split(' ')[0]}! You're all set! 🎉`, {
       duration: 4000,
     });
 
-    // Continue with the search after registration
-    if (searchDestination || searchDate) {
-      handleSearch(searchDestination, searchDate);
+    // Small delay to allow state to update before navigation
+    setTimeout(() => {
+      // Continue with the search after registration
+      if (searchDestination || searchDate) {
+        handleSearch(searchDestination, searchDate);
+      }
+    }, 100);
+  };
+
+  const handleFeedbackSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!feedbackMessage.trim()) {
+      toast.error('Please enter your feedback message');
+      return;
+    }
+
+    setIsSendingFeedback(true);
+
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: session?.name || 'Anonymous',
+          phone: session?.phone || null,
+          message: feedbackMessage.trim(),
+          rating: feedbackRating,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success('Thank you for your feedback! 🙌', {
+          duration: 4000,
+        });
+        setFeedbackMessage('');
+        setFeedbackRating(5);
+      } else {
+        toast.error(data.error || 'Failed to send feedback');
+      }
+    } catch (error) {
+      console.error('Feedback error:', error);
+      toast.error('Failed to send feedback. Please try again.');
+    } finally {
+      setIsSendingFeedback(false);
     }
   };
 
@@ -154,11 +231,30 @@ export default function Home() {
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
 
       <div className="min-h-screen flex flex-col">
-        <Navbar />
+        <Navbar
+          onNotificationClick={() => setIsBookingsModalOpen(true)}
+          onSettingsClick={() => setIsSettingsModalOpen(true)}
+        />
         <Hero onSearch={handleSearch} />
 
         {/* Main Content */}
-        <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 md:pt-20 pb-12 w-full">
+        <main className="flex-grow w-full">
+          {/* Promotions Banner Section */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 md:pt-16 pb-8">
+            <PromotionsBanner onPromoClick={() => {
+              // Scroll to search or handle promo click
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }} />
+          </div>
+
+          {/* Trending Destinations Section */}
+          <TrendingDestinations onDestinationClick={(destination) => {
+            setSearchDestination(destination);
+            handleSearch(destination, '');
+          }} />
+
+          {/* Popular Routes Section */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 md:pt-20 pb-12">
           {/* Section Header with Filters */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8 gap-4">
             <div>
@@ -355,22 +451,67 @@ export default function Home() {
                 <h3 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">
                   Customer Feedback
                 </h3>
-                <form className="space-y-4">
-                  <textarea
-                    placeholder="How was your experience?"
-                    className="w-full border border-slate-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-brand-primary/50 outline-none resize-none h-32 bg-slate-50 focus:bg-white transition-colors"
-                    required
-                  ></textarea>
+                <form className="space-y-4" onSubmit={handleFeedbackSubmit}>
+                  {/* Rating */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      How would you rate your experience?
+                    </label>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setFeedbackRating(star)}
+                          className={`text-2xl transition-transform hover:scale-110 ${
+                            star <= feedbackRating ? 'text-yellow-400' : 'text-slate-300'
+                          }`}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Message */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Your feedback
+                    </label>
+                    <textarea
+                      value={feedbackMessage}
+                      onChange={(e) => setFeedbackMessage(e.target.value)}
+                      placeholder="How was your experience? Your feedback helps us improve..."
+                      className="w-full border border-slate-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-brand-primary/50 outline-none resize-none h-32 bg-slate-50 focus:bg-white transition-colors"
+                      required
+                    ></textarea>
+                  </div>
+
                   <button
                     type="submit"
-                    className="w-full sm:w-auto bg-slate-900 text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-black transition-colors"
+                    disabled={isSendingFeedback || !feedbackMessage.trim()}
+                    className="w-full sm:w-auto bg-slate-900 text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    Send Feedback
+                    {isSendingFeedback ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Sending...
+                      </>
+                    ) : (
+                      'Send Feedback'
+                    )}
                   </button>
                 </form>
               </div>
             </div>
           </div>
+          </div>
+
+          {/* Giveaway Promotions Section - Bottom */}
+          <GiveawayPromos />
         </main>
 
         <Footer />
@@ -411,6 +552,19 @@ export default function Home() {
           isOpen={isRegistrationModalOpen}
           onClose={() => setIsRegistrationModalOpen(false)}
           onRegister={handleRegistration}
+        />
+
+        {/* User Bookings Modal */}
+        <UserBookingsModal
+          isOpen={isBookingsModalOpen}
+          onClose={() => setIsBookingsModalOpen(false)}
+          userPhone={session?.phone || ''}
+        />
+
+        {/* Settings Modal */}
+        <SettingsModal
+          isOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
         />
       </div>
     </>

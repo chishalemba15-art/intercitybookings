@@ -29,7 +29,7 @@ export default function BusCard({ bus, index, onBook }: BusCardProps) {
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: index * 0.1, duration: 0.5 }}
-      className="bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden group"
+      className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden group"
     >
       <div className="p-4 md:p-5 relative">
         {/* WhatsApp Share Button */}
@@ -61,11 +61,11 @@ export default function BusCard({ bus, index, onBook }: BusCardProps) {
             {bus.operator.charAt(0)}
           </div>
           <div className="flex-1">
-            <h3 className="font-bold text-slate-900 leading-tight text-base md:text-lg">
+            <h3 className="font-bold text-slate-900 dark:text-white leading-tight text-base md:text-lg">
               {bus.operator}
             </h3>
-            <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-              <span className="capitalize px-2 py-0.5 bg-slate-100 rounded-full font-medium text-slate-600">
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <span className="capitalize px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-full font-medium text-slate-600 dark:text-slate-300">
                 {bus.type}
               </span>
               <span className="flex items-center gap-1">
@@ -91,22 +91,22 @@ export default function BusCard({ bus, index, onBook }: BusCardProps) {
         {/* Route Visualization */}
         <div className="flex items-center justify-between mb-5 px-2">
           <div className="text-center">
-            <p className="text-base md:text-lg font-bold text-slate-800">
+            <p className="text-base md:text-lg font-bold text-slate-800 dark:text-white">
               {bus.time}
             </p>
-            <p className="text-[10px] md:text-xs text-slate-400 font-medium uppercase tracking-wide">
+            <p className="text-[10px] md:text-xs text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide">
               {bus.from}
             </p>
           </div>
           <div className="flex-1 flex flex-col items-center px-3">
-            <div className="w-full border-t-2 border-dotted border-slate-300 relative top-3"></div>
+            <div className="w-full border-t-2 border-dotted border-slate-300 dark:border-slate-600 relative top-3"></div>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth={2}
               stroke="currentColor"
-              className="w-4 h-4 text-slate-300 bg-white relative z-10"
+              className="w-4 h-4 text-slate-300 dark:text-slate-600 bg-white dark:bg-slate-800 relative z-10"
             >
               <path
                 strokeLinecap="round"
@@ -116,10 +116,10 @@ export default function BusCard({ bus, index, onBook }: BusCardProps) {
             </svg>
           </div>
           <div className="text-center">
-            <p className="text-base md:text-lg font-bold text-slate-800 text-right">
+            <p className="text-base md:text-lg font-bold text-slate-800 dark:text-white text-right">
               Dest.
             </p>
-            <p className="text-[10px] md:text-xs text-slate-400 font-medium uppercase tracking-wide text-right">
+            <p className="text-[10px] md:text-xs text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide text-right">
               {bus.to}
             </p>
           </div>
@@ -130,7 +130,7 @@ export default function BusCard({ bus, index, onBook }: BusCardProps) {
           {bus.features.map((feature, idx) => (
             <span
               key={idx}
-              className="text-[10px] md:text-xs bg-slate-50 text-slate-500 px-2 py-1 rounded border border-slate-100 font-medium"
+              className="text-[10px] md:text-xs bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-1 rounded border border-slate-100 dark:border-slate-600 font-medium"
             >
               {feature}
             </span>
@@ -139,9 +139,9 @@ export default function BusCard({ bus, index, onBook }: BusCardProps) {
       </div>
 
       {/* Footer with Price and CTA */}
-      <div className="mt-auto bg-slate-50 p-4 border-t border-slate-100 flex items-center justify-between">
+      <div className="mt-auto bg-slate-50 dark:bg-slate-700 p-4 border-t border-slate-100 dark:border-slate-600 flex items-center justify-between">
         <div>
-          <span className="text-xs text-slate-400 block">Per Seat</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500 block">Per Seat</span>
           <span className="text-xl md:text-2xl font-extrabold text-brand-primary">
             K{bus.price}
           </span>
@@ -150,7 +150,7 @@ export default function BusCard({ bus, index, onBook }: BusCardProps) {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => onBook(bus.id)}
-          className="bg-slate-900 text-white px-5 md:px-6 py-2 md:py-2.5 rounded-xl text-sm font-semibold shadow-lg hover:bg-brand-primary transition-colors"
+          className="bg-slate-900 dark:bg-slate-600 text-white px-5 md:px-6 py-2 md:py-2.5 rounded-xl text-sm font-semibold shadow-lg hover:bg-brand-primary dark:hover:bg-brand-primary transition-colors"
         >
           Book Now
         </motion.button>
