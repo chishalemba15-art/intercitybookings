@@ -51,6 +51,7 @@ export default function Home() {
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
   const [isBookingsModalOpen, setIsBookingsModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [displayLimit, setDisplayLimit] = useState(6); // Pagination: show 6 buses initially
 
   // Use custom hooks
   const { session, register, incrementSearchCount, needsRegistration, isRegistered } = useUserSession();
@@ -181,6 +182,21 @@ export default function Home() {
         handleSearch(searchDestination, searchDate);
       }
     }, 100);
+  };
+
+  const handleSeeMore = () => {
+    // Check if user is registered
+    if (!isRegistered) {
+      toast('Please register to see more buses', {
+        icon: '🔐',
+        duration: 3000,
+      });
+      setIsRegistrationModalOpen(true);
+      return;
+    }
+
+    // Increase display limit
+    setDisplayLimit(prev => prev + 6);
   };
 
   const handleFeedbackSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -322,7 +338,7 @@ export default function Home() {
                 </div>
               ))
             ) : filteredBuses.length > 0 ? (
-              filteredBuses.map((bus, index) => (
+              filteredBuses.slice(0, displayLimit).map((bus, index) => (
                 <BusCard
                   key={bus.id}
                   bus={bus}
@@ -357,6 +373,40 @@ export default function Home() {
               </div>
             )}
           </div>
+
+          {/* See More Button - Show if there are more buses to display */}
+          {!isLoading && filteredBuses.length > displayLimit && (
+            <div className="mt-8 flex justify-center">
+              <button
+                onClick={handleSeeMore}
+                className="group relative inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+              >
+                <span>See More Buses</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
+                  stroke="currentColor"
+                  className="w-5 h-5 group-hover:translate-y-1 transition-transform"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+                  />
+                </svg>
+                {!isRegistered && (
+                  <span className="absolute -top-2 -right-2 flex h-6 w-6">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-6 w-6 bg-red-500 items-center justify-center text-xs font-bold">
+                      🔐
+                    </span>
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
 
           {/* Info Section */}
           <div className="mt-16 md:mt-20 bg-white rounded-2xl p-6 md:p-10 shadow-sm border border-slate-100">
