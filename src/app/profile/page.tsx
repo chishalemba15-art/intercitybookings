@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserSession } from '@/hooks/useUserSession';
+import { useScrollAnalytics } from '@/hooks/useScrollAnalytics';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import toast from 'react-hot-toast';
@@ -10,6 +11,8 @@ import toast from 'react-hot-toast';
 interface UserStats {
   totalBookings: number;
   totalSearches: number;
+  upcomingBookings: number;
+  totalSpent: string;
   favoriteRoute: string | null;
   memberSince: string;
 }
@@ -20,10 +23,15 @@ export default function ProfilePage() {
   const [stats, setStats] = useState<UserStats>({
     totalBookings: 0,
     totalSearches: 0,
+    upcomingBookings: 0,
+    totalSpent: '0',
     favoriteRoute: null,
     memberSince: new Date().toISOString(),
   });
   const [isLoading, setIsLoading] = useState(true);
+
+  // Track scroll analytics
+  useScrollAnalytics(session?.phone);
 
   useEffect(() => {
     // Redirect if not registered
@@ -43,14 +51,41 @@ export default function ProfilePage() {
     try {
       setIsLoading(true);
 
-      // Fetch user bookings count
+      // Fetch user bookings
       const bookingsResponse = await fetch(`/api/user-bookings?phone=${session.phone}`);
       const bookingsData = await bookingsResponse.json();
 
+      const bookings = bookingsData.bookings || [];
+
+      // Calculate upcoming bookings
+      const now = new Date();
+      const upcoming = bookings.filter((b: any) =>
+        new Date(b.travelDate) >= now && b.status !== 'cancelled'
+      ).length;
+
+      // Calculate total spent
+      const totalSpent = bookings
+        .filter((b: any) => b.status === 'confirmed' || b.status === 'completed')
+        .reduce((sum: number, b: any) => sum + parseFloat(b.totalAmount || 0), 0)
+        .toFixed(2);
+
+      // Find favorite route (most booked)
+      const routeCounts = bookings.reduce((acc: any, b: any) => {
+        const route = b.route || `${b.from} → ${b.to}`;
+        acc[route] = (acc[route] || 0) + 1;
+        return acc;
+      }, {});
+
+      const favoriteRoute = Object.keys(routeCounts).length > 0
+        ? Object.entries(routeCounts).sort((a: any, b: any) => b[1] - a[1])[0][0]
+        : null;
+
       setStats({
-        totalBookings: bookingsData.bookings?.length || 0,
+        totalBookings: bookings.length,
         totalSearches: session.searchCount || 0,
-        favoriteRoute: null, // Can be calculated from bookings
+        upcomingBookings: upcoming,
+        totalSpent,
+        favoriteRoute,
         memberSince: session.registeredAt || new Date().toISOString(),
       });
     } catch (error) {
@@ -65,16 +100,16 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-slate-50" data-section="profile-page">
       <Navbar
         onNotificationClick={() => {}}
         onSettingsClick={() => {}}
       />
 
-      <main className="flex-grow w-full py-8 px-4 sm:px-6 lg:px-8">
+      <main className="flex-grow w-full py-8 px-4 sm:px-6 lg:px-8 pb-24 md:pb-8">
         <div className="max-w-4xl mx-auto">
           {/* Profile Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 mb-6 shadow-lg">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 mb-6 shadow-lg" data-section="profile-header">
             <div className="flex items-center gap-6">
               {/* Avatar */}
               <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-full flex items-center justify-center shadow-md">
@@ -102,7 +137,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" data-section="profile-stats">
             <StatCard
               icon="🎫"
               label="Total Bookings"
@@ -110,9 +145,16 @@ export default function ProfilePage() {
               loading={isLoading}
             />
             <StatCard
-              icon="🔍"
-              label="Searches"
-              value={stats.totalSearches}
+              icon="📅"
+              label="Upcoming Trips"
+              value={stats.upcomingBookings}
+              loading={isLoading}
+            />
+            <StatCard
+              icon="💰"
+              label="Total Spent"
+              value={`${stats.totalSpent} ZMW`}
+              isString={true}
               loading={isLoading}
             />
             <StatCard
@@ -121,13 +163,20 @@ export default function ProfilePage() {
               value={stats.totalBookings * 10}
               loading={isLoading}
             />
-            <StatCard
-              icon="🎁"
-              label="Rewards"
-              value={Math.floor(stats.totalBookings / 5)}
-              loading={isLoading}
-            />
           </div>
+
+          {/* Favorite Route */}
+          {stats.favoriteRoute && !isLoading && (
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4 mb-6 border border-purple-100" data-section="favorite-route">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🌟</span>
+                <div>
+                  <p className="text-sm text-slate-600">Your Favorite Route</p>
+                  <p className="text-lg font-bold text-slate-900">{stats.favoriteRoute}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Recent Activity */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
@@ -139,7 +188,7 @@ export default function ProfilePage() {
                 icon="🚌"
                 label="View My Bookings"
                 description="See all your past and upcoming trips"
-                onClick={() => router.push('/?bookings=true')}
+                onClick={() => router.push('/bookings')}
               />
               <ActionButton
                 icon="🔔"
@@ -188,11 +237,12 @@ export default function ProfilePage() {
   );
 }
 
-function StatCard({ icon, label, value, loading }: {
+function StatCard({ icon, label, value, loading, isString }: {
   icon: string;
   label: string;
-  value: number;
+  value: number | string;
   loading: boolean;
+  isString?: boolean;
 }) {
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
@@ -200,7 +250,9 @@ function StatCard({ icon, label, value, loading }: {
       {loading ? (
         <div className="h-8 bg-slate-200 rounded animate-pulse mb-2"></div>
       ) : (
-        <div className="text-2xl font-bold text-slate-900 mb-1">{value}</div>
+        <div className={`font-bold text-slate-900 mb-1 ${isString ? 'text-lg' : 'text-2xl'}`}>
+          {value}
+        </div>
       )}
       <div className="text-xs text-slate-600">{label}</div>
     </div>

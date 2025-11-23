@@ -17,6 +17,7 @@ import GiveawayPromos from '@/components/GiveawayPromos';
 import Footer from '@/components/Footer';
 import { useUserSession } from '@/hooks/useUserSession';
 import { useBookingNotifications } from '@/hooks/useBookingNotifications';
+import { useScrollAnalytics } from '@/hooks/useScrollAnalytics';
 
 interface Bus {
   id: number;
@@ -60,6 +61,9 @@ export default function Home() {
     enabled: true,
     onBookingClick: () => setIsBookingsModalOpen(true),
   });
+
+  // Track scroll analytics
+  useScrollAnalytics(session?.phone);
 
   // Load buses on mount
   useEffect(() => {
