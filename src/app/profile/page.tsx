@@ -170,8 +170,14 @@ export default function ProfilePage() {
             <div className="space-y-4">
               <DetailRow label="Full Name" value={session.name || 'Not set'} />
               <DetailRow label="Phone Number" value={session.phone || 'Not set'} />
-              <DetailRow label="Email" value={session.email || 'Not set'} />
-              <DetailRow label="City" value={session.city || 'Not set'} />
+              <DetailRow
+                label="Member Since"
+                value={new Date(stats.memberSince).toLocaleDateString('en-ZM', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              />
             </div>
           </div>
         </div>
