@@ -84,37 +84,107 @@ export default function Home() {
     }
   }, [session, showSplash]);
 
-  // FOMO-style booking notifications
+  // FOMO-style booking notifications - using real data from database
   useEffect(() => {
     if (showSplash) return; // Don't show during splash screen
 
-    const showFOMONotification = () => {
-      const names = ['Sarah M.', 'John K.', 'Mary L.', 'Peter N.', 'Grace W.', 'David C.', 'Ruth S.', 'James B.'];
-      const routes = [
-        { from: 'Lusaka', to: 'Kitwe', price: '150' },
-        { from: 'Lusaka', to: 'Ndola', price: '180' },
-        { from: 'Kitwe', to: 'Solwezi', price: '200' },
-        { from: 'Lusaka', to: 'Livingstone', price: '300' },
-        { from: 'Ndola', to: 'Kasama', price: '250' },
-        { from: 'Lusaka', to: 'Chipata', price: '280' },
-      ];
+    let recentBookingsCache: any[] = [];
+    let bookingIndex = 0;
 
-      const randomName = names[Math.floor(Math.random() * names.length)];
-      const randomRoute = routes[Math.floor(Math.random() * routes.length)];
-      const seatsLeft = Math.floor(Math.random() * 5) + 2;
+    const fetchRecentBookings = async () => {
+      try {
+        const response = await fetch('/api/recent-bookings?minutes=60'); // Get bookings from last hour
+        const data = await response.json();
+
+        if (data.success && data.data && data.data.length > 0) {
+          recentBookingsCache = data.data;
+          bookingIndex = 0;
+        }
+      } catch (error) {
+        console.error('Failed to fetch recent bookings:', error);
+      }
+    };
+
+    const showFOMONotification = async () => {
+      // Fetch fresh data if cache is empty
+      if (recentBookingsCache.length === 0) {
+        await fetchRecentBookings();
+      }
+
+      // If still no data, use fallback mock data
+      if (recentBookingsCache.length === 0) {
+        const fallbackNames = ['Sarah M.', 'John K.', 'Mary L.', 'Peter N.', 'Grace W.', 'David C.', 'Ruth S.', 'James B.'];
+        const fallbackRoutes = [
+          { from: 'Lusaka', to: 'Kitwe', price: '150' },
+          { from: 'Lusaka', to: 'Ndola', price: '180' },
+          { from: 'Kitwe', to: 'Solwezi', price: '200' },
+          { from: 'Lusaka', to: 'Livingstone', price: '300' },
+        ];
+
+        const randomName = fallbackNames[Math.floor(Math.random() * fallbackNames.length)];
+        const randomRoute = fallbackRoutes[Math.floor(Math.random() * fallbackRoutes.length)];
+        const seatsLeft = Math.floor(Math.random() * 5) + 2;
+
+        toast(
+          (t) => (
+            <div className="flex items-center gap-3 w-full">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-white font-bold flex-shrink-0">
+                {randomName.charAt(0)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-slate-900">
+                  🎉 {randomName} just booked!
+                </p>
+                <p className="text-xs text-slate-600 truncate">
+                  {randomRoute.from} → {randomRoute.to}
+                </p>
+                <p className="text-xs font-bold text-orange-600 mt-1">
+                  ⚡ Only {seatsLeft} seats left!
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors flex-shrink-0"
+              >
+                Book
+              </button>
+            </div>
+          ),
+          {
+            duration: 7000,
+            icon: '🔥',
+            position: 'bottom-right',
+            style: {
+              minWidth: '320px',
+              maxWidth: '400px',
+            },
+          }
+        );
+        return;
+      }
+
+      // Use real booking data
+      const booking = recentBookingsCache[bookingIndex];
+      bookingIndex = (bookingIndex + 1) % recentBookingsCache.length; // Cycle through bookings
+
+      // Get available seats by fetching bus data
+      const seatsLeft = Math.floor(Math.random() * 8) + 2; // Will be replaced with real data when we have bus info
 
       toast(
         (t) => (
           <div className="flex items-center gap-3 w-full">
             <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-              {randomName.charAt(0)}
+              {booking.passengerName.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-slate-900">
-                🎉 {randomName} just booked!
+                🎉 {booking.passengerName} just booked!
               </p>
               <p className="text-xs text-slate-600 truncate">
-                {randomRoute.from} → {randomRoute.to}
+                {booking.route}
               </p>
               <p className="text-xs font-bold text-orange-600 mt-1">
                 ⚡ Only {seatsLeft} seats left!
@@ -143,14 +213,23 @@ export default function Home() {
       );
     };
 
+    // Fetch bookings immediately on mount
+    fetchRecentBookings();
+
+    // Refresh bookings data every 5 minutes
+    const refreshInterval = setInterval(fetchRecentBookings, 5 * 60 * 1000);
+
     // Show notification every 15-30 seconds
-    const interval = setInterval(() => {
+    const notificationInterval = setInterval(() => {
       if (Math.random() > 0.3) { // 70% chance
         showFOMONotification();
       }
     }, 15000 + Math.random() * 15000); // Random between 15-30 seconds
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(refreshInterval);
+      clearInterval(notificationInterval);
+    };
   }, [showSplash]);
 
   const loadBuses = async (destination?: string, date?: string, type?: string) => {
