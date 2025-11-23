@@ -111,62 +111,12 @@ export default function Home() {
         await fetchRecentBookings();
       }
 
-      // If still no data, use fallback mock data
+      // If no real bookings available, don't show notification
       if (recentBookingsCache.length === 0) {
-        const fallbackNames = ['Sarah M.', 'John K.', 'Mary L.', 'Peter N.', 'Grace W.', 'David C.', 'Ruth S.', 'James B.'];
-        const fallbackRoutes = [
-          { from: 'Lusaka', to: 'Kitwe', price: '150' },
-          { from: 'Lusaka', to: 'Ndola', price: '180' },
-          { from: 'Kitwe', to: 'Solwezi', price: '200' },
-          { from: 'Lusaka', to: 'Livingstone', price: '300' },
-        ];
-
-        const randomName = fallbackNames[Math.floor(Math.random() * fallbackNames.length)];
-        const randomRoute = fallbackRoutes[Math.floor(Math.random() * fallbackRoutes.length)];
-        const seatsLeft = Math.floor(Math.random() * 5) + 2;
-
-        toast(
-          (t) => (
-            <div className="flex items-center gap-3 w-full">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-                {randomName.charAt(0)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-900">
-                  🎉 {randomName} just booked!
-                </p>
-                <p className="text-xs text-slate-600 truncate">
-                  {randomRoute.from} → {randomRoute.to}
-                </p>
-                <p className="text-xs font-bold text-orange-600 mt-1">
-                  ⚡ Only {seatsLeft} seats left!
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  toast.dismiss(t.id);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className="px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors flex-shrink-0"
-              >
-                Book
-              </button>
-            </div>
-          ),
-          {
-            duration: 7000,
-            icon: '🔥',
-            position: 'bottom-right',
-            style: {
-              minWidth: '320px',
-              maxWidth: '400px',
-            },
-          }
-        );
         return;
       }
 
-      // Use real booking data
+      // Use real booking data from database
       const booking = recentBookingsCache[bookingIndex];
       bookingIndex = (bookingIndex + 1) % recentBookingsCache.length; // Cycle through bookings
 
