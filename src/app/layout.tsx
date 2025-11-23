@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from '@/context/ThemeContext';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -64,6 +65,7 @@ export default function RootLayout({
               }}
             />
             {children}
+            <MobileBottomNav />
           </ThemeProvider>
       </body>
     </html>

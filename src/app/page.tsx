@@ -10,6 +10,7 @@ import BookingModal from '@/components/BookingModal';
 import RegistrationModal from '@/components/RegistrationModal';
 import PromotionsBanner from '@/components/PromotionsBanner';
 import TrendingDestinations from '@/components/TrendingDestinations';
+import TrendingRoutesCards from '@/components/TrendingRoutesCards';
 import UserBookingsModal from '@/components/UserBookingsModal';
 import SettingsModal from '@/components/SettingsModal';
 import GiveawayPromos from '@/components/GiveawayPromos';
@@ -82,6 +83,75 @@ export default function Home() {
       }
     }
   }, [session, showSplash]);
+
+  // FOMO-style booking notifications
+  useEffect(() => {
+    if (showSplash) return; // Don't show during splash screen
+
+    const showFOMONotification = () => {
+      const names = ['Sarah M.', 'John K.', 'Mary L.', 'Peter N.', 'Grace W.', 'David C.', 'Ruth S.', 'James B.'];
+      const routes = [
+        { from: 'Lusaka', to: 'Kitwe', price: '150' },
+        { from: 'Lusaka', to: 'Ndola', price: '180' },
+        { from: 'Kitwe', to: 'Solwezi', price: '200' },
+        { from: 'Lusaka', to: 'Livingstone', price: '300' },
+        { from: 'Ndola', to: 'Kasama', price: '250' },
+        { from: 'Lusaka', to: 'Chipata', price: '280' },
+      ];
+
+      const randomName = names[Math.floor(Math.random() * names.length)];
+      const randomRoute = routes[Math.floor(Math.random() * routes.length)];
+      const seatsLeft = Math.floor(Math.random() * 5) + 2;
+
+      toast(
+        (t) => (
+          <div className="flex items-center gap-3 w-full">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-white font-bold flex-shrink-0">
+              {randomName.charAt(0)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-slate-900">
+                🎉 {randomName} just booked!
+              </p>
+              <p className="text-xs text-slate-600 truncate">
+                {randomRoute.from} → {randomRoute.to}
+              </p>
+              <p className="text-xs font-bold text-orange-600 mt-1">
+                ⚡ Only {seatsLeft} seats left!
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors flex-shrink-0"
+            >
+              Book
+            </button>
+          </div>
+        ),
+        {
+          duration: 7000,
+          icon: '🔥',
+          position: 'bottom-right',
+          style: {
+            minWidth: '320px',
+            maxWidth: '400px',
+          },
+        }
+      );
+    };
+
+    // Show notification every 15-30 seconds
+    const interval = setInterval(() => {
+      if (Math.random() > 0.3) { // 70% chance
+        showFOMONotification();
+      }
+    }, 15000 + Math.random() * 15000); // Random between 15-30 seconds
+
+    return () => clearInterval(interval);
+  }, [showSplash]);
 
   const loadBuses = async (destination?: string, date?: string, type?: string) => {
     setIsLoading(true);
@@ -255,6 +325,12 @@ export default function Home() {
 
         {/* Main Content */}
         <main className="flex-grow w-full">
+          {/* Trending Routes Cards */}
+          <TrendingRoutesCards onRouteClick={(from, to) => {
+            setSearchDestination(to);
+            handleSearch(to, '');
+          }} />
+
           {/* Promotions Banner Section */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 md:pt-16 pb-8">
             <PromotionsBanner onPromoClick={() => {

@@ -142,6 +142,13 @@
   .safe-right {
     padding-right: env(safe-area-inset-right);
   }
+
+  /* Mobile Bottom Navigation Padding */
+  @media (max-width: 768px) {
+    .pb-mobile-nav {
+      padding-bottom: 5rem; /* 80px for bottom nav + extra spacing */
+    }
+  }
 }
 
 /* Print Styles */
